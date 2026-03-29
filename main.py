@@ -132,7 +132,7 @@ def main(argc:int, argv:list[str])->None: # test it against my pi #add something
             print(help());
             return;
 
-    COLOUR=ANSI.REDBG.value+ANSI.BLACK.value;
+    COLOUR=ANSI.CYANBG.value+ANSI.BLACK.value;
     disp=Display();
     disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{IP}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
     disp.suffix=f"{ANSI.END.value}\n";
