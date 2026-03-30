@@ -148,7 +148,7 @@ def main(argc:int, argv:list[str])->None: # test it against my pi #add something
     intervalBetweenArpPackets:float=0.1;
     while True:
         # reset the display prefix every tick because... i dont know how to update any dynamically?
-        disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{IP}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
+        disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
         userInput=disp.input();
         if (userInput[:-1]=="exit" or userInput[:-1]=="quit"):
             break;
