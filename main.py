@@ -134,7 +134,7 @@ def main(argc:int, argv:list[str])->None: # test it against my pi #add something
 
     COLOUR=ANSI.CYANBG.value+ANSI.BLACK.value;
     disp=Display();
-    disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{IP}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
+    disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
     disp.suffix=f"{ANSI.END.value}\n";
     disp.prePrint=f"{ANSI.DIM.value}";
     disp.preInput=f"{ANSI.BOLD.value}";
