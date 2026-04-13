@@ -7,17 +7,19 @@ from enum import Enum
 from datetime import datetime
 scapy.conf.verb=0;
 
-#test data
+#test data, ignore
 IP:str="192.168.50.224";
 MAC:str="d8:b1:ee:36:ca:7b"
 RECV_IP:str="192.168.50.150";
 RECV_MAC:str="b8:27:eb:74:f2:6c";
 BAD_MAC:str="33:33:33:33:33:33"
 
+#my hadware d0:88:0c:7e:84:a5
+
 def sendArp(deviceIp,deviceMac, sendToIp,sendToMac)->None:
-    arp = scapy.ARP(
+    arp = scapy.ARP( #scapy.Ether(dst=sendToMac,src=deviceMac,type=0x0806)/scapy.ARP(
         hwtype=0x01,ptype=0x0800,
-        hwlen=0x06,plen=0x04,op=1,  # error in plen 0x04, fixed
+        hwlen=0x06,plen=0x04,op=1,
         hwsrc=deviceMac,
         psrc=deviceIp,
         hwdst=sendToMac,
@@ -25,7 +27,7 @@ def sendArp(deviceIp,deviceMac, sendToIp,sendToMac)->None:
     );
     scapy.send(arp);
 
-class ArpLoop(threading.Thread):
+class ArpLoop(threading.Thread): # object that lets you control a thread
     def __init__(self,deviceIp,deviceMac, sendToIp,sendToMac, interval:float=0.5)->None:
         super().__init__(daemon=True);
         self._exit=threading.Event();
@@ -40,12 +42,7 @@ class ArpLoop(threading.Thread):
             time.sleep(self._interval);
     def stop(self):
         self._exit.set();
-"""
-def ban(deviceIp,deviceMac, ip,mac, interval:float=0.5)->None:
-    while True:
-        sendArp(deviceIp,deviceMac,ip,mac);
-        time.sleep(interval);
-"""
+
 class ANSI(Enum):
     END="\033[0m";
     BOLD="\033[1m";
@@ -103,6 +100,23 @@ class Display:
         if (self.flush): sys.stdout.flush();
         return read;
 
+# user must be able to pass arguments into it
+class CommandParser:
+    def __init__(self):
+        self._functionList:list[function]=[];
+    def update(self,input_:str)->None:
+        for function_ in self._functionList:
+            if (function_["prefix"]!=input_[0:len(function_["prefix"])]):
+                continue;
+            if(function_["function"].__name__!=input_[len(function_["prefix"]):len(function_["prefix"]+function_["function"].__name__)]):
+                continue;
+            function_["function"]();
+    
+    def makeCommand(self,prefix:str=""):
+        def wrapper(fn):
+            self._functionList.append({"function":fn,"prefix":prefix});
+        return wrapper;
+
 def help()->str:
     return ("""all comands (in order):
             
@@ -126,19 +140,20 @@ def help()->str:
             \t\t   exit"""
         );
 
-def main(argc:int, argv:list[str])->None: # test it against my pi #add somethingg handle duplicates in fromips and frommacs
+def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in fromips and frommacs, # add a way to add multiple macs to an ip
     if (argc>1):
         if (argv[1]=="--help" or argv[1]=="-h" or argv[1]=="-help"):
             print(help());
             return;
 
-    COLOUR=ANSI.CYANBG.value+ANSI.BLACK.value;
+    COLOUR=ANSI.YELLOWBG.value+ANSI.BLACK.value;
+    commands=CommandParser();
     disp=Display();
-    disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
+    disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} › {ANSI.END.value}";
     disp.suffix=f"{ANSI.END.value}\n";
     disp.prePrint=f"{ANSI.DIM.value}";
     disp.preInput=f"{ANSI.BOLD.value}";
-    disp.print("Send Arp Packets, Welcome");
+    disp.print("Send Arp Papppckets, Welcome");
 
     targetIp:str="";
     targetMac:str="";
@@ -146,10 +161,19 @@ def main(argc:int, argv:list[str])->None: # test it against my pi #add something
     fromMac:list[str]=[];
     arpThreads:list[ArpLoop]=[];
     intervalBetweenArpPackets:float=0.1;
+
+    #@commands.makeCommand(prefix="set ",command="targetip")
+    #def setTargetIp(value):
+    #    targetIp=value;
+    #    disp.print("target ip set to ", value);
+    
+
     while True:
         # reset the display prefix every tick because... i dont know how to update any dynamically?
-        disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} >> {ANSI.END.value}";
+        disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} › {ANSI.END.value}";
         userInput=disp.input();
+        #commands.update();
+
         if (userInput[:-1]=="exit" or userInput[:-1]=="quit"):
             break;
         if (userInput[:-1]=="help"):
