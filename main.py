@@ -14,8 +14,6 @@ RECV_IP:str="192.168.50.150";
 RECV_MAC:str="b8:27:eb:74:f2:6c";
 BAD_MAC:str="33:33:33:33:33:33"
 
-#my hadware d0:88:0c:7e:84:a5
-
 def sendArp(deviceIp,deviceMac, sendToIp,sendToMac)->None:
     arp = scapy.ARP( #scapy.Ether(dst=sendToMac,src=deviceMac,type=0x0806)/scapy.ARP(
         hwtype=0x01,ptype=0x0800,
@@ -88,10 +86,10 @@ class Display:
         sys.stdout.write(self.suffix+"\n");  # <---- contains a \n so there is an empty line bewteen every line
         if (self.flush): sys.stdout.flush(); #       The input method creates its own new line when the user 
     def input(self,*args)->str:              #       clicks enter. 
-        sys.stdout.write(self.prefix);
-        sys.stdout.write(self.preInput);
+        sys.stdout.write(self.prefix);  # writes the prefix
+        sys.stdout.write(self.preInput);# writes preinput 
         listArgs=list(args);
-        for i,v in enumerate(listArgs):
+        for i,v in enumerate(listArgs): # converts *args into a single string to be printed
             listArgs[i]=str(listArgs[i]);
         sys.stdout.write(''.join(listArgs));
         sys.stdout.flush();
@@ -99,23 +97,6 @@ class Display:
         sys.stdout.write(self.suffix);
         if (self.flush): sys.stdout.flush();
         return read;
-
-# user must be able to pass arguments into it
-class CommandParser:
-    def __init__(self):
-        self._functionList:list[function]=[];
-    def update(self,input_:str)->None:
-        for function_ in self._functionList:
-            if (function_["prefix"]!=input_[0:len(function_["prefix"])]):
-                continue;
-            if(function_["function"].__name__!=input_[len(function_["prefix"]):len(function_["prefix"]+function_["function"].__name__)]):
-                continue;
-            function_["function"]();
-    
-    def makeCommand(self,prefix:str=""):
-        def wrapper(fn):
-            self._functionList.append({"function":fn,"prefix":prefix});
-        return wrapper;
 
 def help()->str:
     return ("""all comands (in order):
@@ -147,7 +128,6 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
             return;
 
     COLOUR=ANSI.YELLOWBG.value+ANSI.BLACK.value;
-    commands=CommandParser();
     disp=Display();
     disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} › {ANSI.END.value}";
     disp.suffix=f"{ANSI.END.value}\n";
@@ -161,19 +141,10 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
     fromMac:list[str]=[];
     arpThreads:list[ArpLoop]=[];
     intervalBetweenArpPackets:float=0.1;
-
-    #@commands.makeCommand(prefix="set ",command="targetip")
-    #def setTargetIp(value):
-    #    targetIp=value;
-    #    disp.print("target ip set to ", value);
-    
-
     while True:
         # reset the display prefix every tick because... i dont know how to update any dynamically?
         disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} › {ANSI.END.value}";
         userInput=disp.input();
-        #commands.update();
-
         if (userInput[:-1]=="exit" or userInput[:-1]=="quit"):
             break;
         if (userInput[:-1]=="help"):
@@ -224,7 +195,7 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
         elif (userInput[0:15]=="remove frommacs"):
             #print(len(userInput[16:-1].split(',')));
             if (len(userInput[16:-1].split(','))>1):
-                fromMac=[x for x in fromMac if x not in userInput[16:-1].split(',')];
+                fromMac=[x for x in fromMac if x not in userInput[16:-1].split(',')]; 
                 continue;
             if (userInput[16:-1]=="*"): 
                 fromMac.clear();
@@ -253,6 +224,15 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
             for i,v in enumerate(arpThreads):
                 arpThreads[i].stop();
             arpThreads.clear();
+        
+        elif (userInput[:-1]=="set arp"): # remove the \n by using string slicing :-1
+            fromMac = disp.input("Sender Hardware Address: ")[:-1];
+            fromIP = disp.input("Sender Protocol Address: ")[:-1];
+            sendMac = disp.input("Target Hardware Address: ")[:-1];
+            sendIP = disp.input("Target Protocol Address: ")[:-1];
+            disp.print(f"sent, '{fromMac}' '{fromIP}' '{sendMac}' '{sendIP}'");
+            sendArp(fromIP, fromMac, sendIP, sendMac);
+            #sendArp("192.168.50.88","33:33:33:33:33:33","192.168.50.150","b8:27:eb:74:f2:6c");
 
         else:
             disp.print(f"{ANSI.END.value}{ANSI.RED.value}Command: '{userInput[:-1]}' not found{ANSI.END.value}");
