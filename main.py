@@ -133,7 +133,7 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
     disp.suffix=f"{ANSI.END.value}\n";
     disp.prePrint=f"{ANSI.DIM.value}";
     disp.preInput=f"{ANSI.BOLD.value}";
-    disp.print("Send Arp Papppckets, Welcome");
+    disp.print("Send Arp Packets, Welcome");
 
     targetIp:str="";
     targetMac:str="";
