@@ -127,6 +127,10 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
             print(help());
             return;
 
+    #check if is using root by checking effective user id (euid)
+    if (os.geteuid()!=0):
+        raise PermissionError("Permsion denied. USE SUDO!!");
+
     COLOUR=ANSI.YELLOWBG.value+ANSI.BLACK.value;
     disp=Display();
     disp.prefix=f"{COLOUR}{datetime.now().strftime("%H:%M:%S")}||{ANSI.BOLD.value}{scapy.get_if_addr(scapy.conf.iface)}{ANSI.END.value}{COLOUR} › {ANSI.END.value}";
