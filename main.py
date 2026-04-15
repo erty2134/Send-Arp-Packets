@@ -12,7 +12,7 @@ IP:str="192.168.50.224";
 MAC:str="d8:b1:ee:36:ca:7b"
 RECV_IP:str="192.168.50.150";
 RECV_MAC:str="b8:27:eb:74:f2:6c";
-BAD_MAC:str="33:33:33:33:33:33"
+BAD_MAC:str="33:33:33:33:33:33";
 
 def sendArp(deviceIp,deviceMac, sendToIp,sendToMac)->None:
     arp = scapy.ARP( #scapy.Ether(dst=sendToMac,src=deviceMac,type=0x0806)/scapy.ARP(
@@ -230,12 +230,12 @@ def main(argc:int, argv:list[str])->None: #add somethingg handle duplicates in f
             arpThreads.clear();
         
         elif (userInput[:-1]=="set arp"): # remove the \n by using string slicing :-1
-            fromMac = disp.input("Sender Hardware Address: ")[:-1];
+            fromMAc = disp.input("Sender Hardware Address: ")[:-1];
             fromIP = disp.input("Sender Protocol Address: ")[:-1];
             sendMac = disp.input("Target Hardware Address: ")[:-1];
             sendIP = disp.input("Target Protocol Address: ")[:-1];
-            disp.print(f"sent, '{fromMac}' '{fromIP}' '{sendMac}' '{sendIP}'");
-            sendArp(fromIP, fromMac, sendIP, sendMac);
+            disp.print(f"sent, '{fromMAc}' '{fromIP}' '{sendMac}' '{sendIP}'");
+            sendArp(fromIP, fromMAc, sendIP, sendMac);
             #sendArp("192.168.50.88","33:33:33:33:33:33","192.168.50.150","b8:27:eb:74:f2:6c");
 
         else:
